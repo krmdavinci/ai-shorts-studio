@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+requests>=2.31
+yt-dlp
+numpy>=1.24           # audio array for local transcription
+faster-whisper>=1.1.1  # local transcription (default; first run downloads a ~150 MB model)
+av>=12.3.0            # faster-whisper declares av>=11 but its decoder crashes below av 12 (metadata_errors)

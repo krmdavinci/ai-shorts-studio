@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Shorts Generator</title>
+<style>
+:root{--tx:#eef0f8;--mut:#9aa0b8;--ac:#8b5cf6;--ac2:#3b82f6;--ok:#34d399;--er:#fb7185;--bd:rgba(148,130,220,.16)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:"Segoe UI",Inter,system-ui,sans-serif;color:var(--tx);
+ background:radial-gradient(700px 480px at 6% 30%,rgba(109,40,217,.34),transparent 65%),
+ radial-gradient(700px 480px at 96% 88%,rgba(37,99,235,.26),transparent 65%),#070a16}
+.wrap{max-width:1060px;margin:0 auto;padding:22px 18px 30px}
+/* top bar */
+.top{display:flex;align-items:center;gap:14px;background:rgba(19,23,40,.75);border:1px solid var(--bd);
+ border-radius:16px;padding:14px 20px;backdrop-filter:blur(10px)}
+.logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#3b82f6);
+ display:grid;place-items:center;box-shadow:0 4px 18px rgba(124,58,237,.45)}
+.logo svg{width:24px;height:24px;fill:#fff}
+.tt b{font-size:19px;display:block}.tt span{font-size:11.5px;color:var(--mut)}
+.icons{margin-left:auto;display:flex;gap:8px;align-items:center}
+.icons a,.icons button{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:rgba(255,255,255,.05);
+ border:1px solid var(--bd);color:var(--mut);cursor:pointer;font-size:13px;text-decoration:none}
+.icons button:hover,.icons a:hover{color:#fff;border-color:var(--ac)}
+/* main grid */
+.grid{display:grid;grid-template-columns:7fr 5fr;gap:18px;margin-top:18px}
+@media(max-width:880px){.grid{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,rgba(26,30,52,.88),rgba(14,18,34,.88));border:1px solid var(--bd);
+ border-radius:18px;padding:24px;backdrop-filter:blur(12px)}
+.form-card{position:relative;overflow:hidden}
+.form-card:before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
+ background:linear-gradient(90deg,transparent,#8b5cf6,#3b82f6,#22d3ee,transparent)}
+h2{font-size:19px;margin:0 0 22px;text-align:center;font-weight:700}
+label{display:block;font-size:12px;color:var(--mut);margin:16px 0 7px}
+input[type=text],input[type=password],input[type=number],select,textarea{width:100%;background:rgba(9,12,24,.85);
+ border:1px solid var(--bd);color:var(--tx);border-radius:11px;padding:11px 13px;font-size:13.5px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(139,92,246,.18)}
+textarea{min-height:200px;font-family:Consolas,monospace;font-size:12px}
+.srcrow{display:flex;align-items:center;gap:10px}
+.srcrow .filebox{flex:1.2;display:flex;align-items:center;gap:0;background:rgba(9,12,24,.85);border:1px solid var(--bd);border-radius:11px;overflow:hidden}
+.srcrow input[type=file]{display:none}
+.srcrow .pick{background:#f4f4f8;color:#111;border:0;padding:9px 16px;font-size:12.5px;font-weight:600;cursor:pointer;border-radius:8px;margin:4px}
+.srcrow .fname{font-size:12.5px;color:var(--mut);padding:0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srcrow .or{color:var(--mut);font-size:13px}
+.srcrow .url{flex:1}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* mode cards */
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.mode{border:1px solid var(--bd);border-radius:13px;padding:14px 12px;text-align:center;cursor:pointer;background:rgba(9,12,24,.6);transition:.15s}
+.mode b{display:block;font-size:14.5px;margin-bottom:4px}
+.mode span{font-size:11px;color:var(--mut);line-height:1.5;display:block}
+.mode.sel{border-color:var(--ac);background:rgba(124,58,237,.16);box-shadow:0 0 0 1px var(--ac),0 6px 20px rgba(124,58,237,.25)}
+.go{width:100%;margin-top:22px;border:0;border-radius:12px;padding:15px;font-size:15.5px;font-weight:700;color:#fff;cursor:pointer;
+ background:linear-gradient(90deg,#7c3aed,#2563eb);box-shadow:0 8px 26px rgba(109,40,217,.45)}
+.go:disabled{opacity:.55;cursor:not-allowed}
+/* status card */
+.stcard h3{margin:0 0 4px;font-size:15px;display:flex;align-items:center;justify-content:space-between}
+.stcard h3 .clr{background:none;border:0;color:var(--mut);cursor:pointer;font-size:15px}
+.stcard h3 .clr:hover{color:var(--er)}
+.stbody{min-height:300px;display:flex;flex-direction:column}
+.empty{margin:auto;text-align:center;color:var(--mut)}
+.empty .box{font-size:44px;opacity:.35;margin-bottom:12px}
+.empty p{font-size:12.5px;line-height:1.7;max-width:210px;margin:0 auto}
+.spin{width:56px;height:56px;margin:34px auto 18px;border-radius:50%;border:5px solid rgba(139,92,246,.2);border-top-color:var(--ac);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.proc{text-align:center;font-size:16px;font-weight:700}
+.plog{margin-top:14px;font:10.5px/1.65 Consolas,monospace;color:#7d84a0;text-align:left;max-height:210px;overflow:auto;white-space:pre-wrap}
+.note{margin-top:10px;font-size:11px;color:var(--mut);text-align:center;line-height:1.6}
+.done-h{text-align:center;margin:14px 0 4px;font-size:17px;font-weight:700;color:var(--ok)}
+.done-n{text-align:center;color:var(--mut);font-size:13px;margin-bottom:14px}
+.res{background:rgba(9,12,24,.7);border:1px solid var(--bd);border-radius:13px;padding:14px 16px;margin-bottom:12px;font-size:12.5px}
+.res b.t{font-size:14px;display:block;margin-bottom:8px;text-align:center}
+.res .lab{color:var(--mut);font-size:11px;margin:8px 0 3px}
+.res .why{color:#c6cade;line-height:1.6}
+.res .hook{color:#c6cade;line-height:1.6;font-style:italic}
+.res .meta{margin-top:10px;color:var(--tx);font-size:12px}
+.res .meta b{color:#facc15}
+.res .path{margin-top:8px;font:10.5px Consolas,monospace;color:#6f7692;word-break:break-all;background:rgba(0,0,0,.35);padding:6px 8px;border-radius:7px}
+.res a.dl{display:inline-block;margin-top:9px;color:#a78bfa;font-weight:600;text-decoration:none;font-size:12.5px}
+.res a.dl:hover{text-decoration:underline}
+.errbox{background:rgba(251,113,133,.09);border:1px solid rgba(251,113,133,.35);border-radius:12px;padding:13px 15px;font-size:12.5px;color:#fda4af;line-height:1.6;margin-top:16px}
+/* footer */
+.foot{margin-top:18px;background:rgba(19,23,40,.6);border:1px solid var(--bd);border-radius:14px;text-align:center;
+ padding:13px;font-size:12.5px;color:var(--mut)}
+/* modal */
+.mback{position:fixed;inset:0;background:rgba(3,5,12,.72);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;z-index:50;overflow:auto;padding:40px 16px}
+.mback.on{display:flex}
+.modal{background:linear-gradient(180deg,#1a1e34,#12162700),#141829;border:1px solid var(--bd);border-radius:16px;padding:24px;width:430px;max-width:100%;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.modal.wide{width:760px}
+.modal h3{margin:0 0 18px;font-size:17px;text-align:center}
+.mx{position:absolute;top:14px;left:14px;background:none;border:0;color:var(--mut);font-size:17px;cursor:pointer}
+.mx:hover{color:#fff}
+.save{width:100%;margin-top:18px;border:0;border-radius:11px;padding:13px;font-size:14.5px;font-weight:700;color:#fff;cursor:pointer;background:linear-gradient(90deg,#7c3aed,#6d28d9)}
+.hint{font-size:11.5px;color:var(--mut);margin-top:7px;line-height:1.6}
+.adv{display:block;text-align:center;margin-top:14px;font-size:12.5px;color:#a78bfa;cursor:pointer}
+.adv:hover{text-decoration:underline}
+.sec{margin-bottom:18px;background:rgba(9,12,24,.5);border:1px solid var(--bd);border-radius:13px;padding:16px}
+.sec h4{margin:0 0 6px;font-size:13.5px;color:#c4b5fd}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.row label{text-align:left}
+.chk{display:flex;align-items:center;gap:8px;margin-top:22px;font-size:13px}
+.chk input{width:auto}
+.btn2{background:rgba(255,255,255,.06);border:1px solid var(--bd);color:var(--tx);border-radius:10px;padding:9px 15px;font-size:12.5px;cursor:pointer}
+.btn2:hover{border-color:var(--ac)}
+.tst{font-size:12px;margin-left:8px}
+</style></head><body>
+<div class="wrap">
+ <div class="top">
+  <div class="logo"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></div>
+  <div class="tt"><b>Short Video Maker</b><span>AI Shorts Generator | based on the AI School channel tool</span></div>
+  <div class="icons">
+   <button id="gear" title="API settings">&#9881;</button>
+   <a title="Facebook" href="#" onclick="return false">f</a>
+   <a title="X" href="#" onclick="return false">&#120143;</a>
+   <a title="Instagram" href="#" onclick="return false">&#9685;</a>
+   <a title="YouTube" href="#" onclick="return false">&#9654;</a>
+  </div>
+ </div>
+
+ <div class="grid">
+  <div class="card form-card">
+   <h2>&#9889; Convert a YouTube Video to Shorts</h2>
+   <label>YouTube link (YouTube URL) or a local video</label>
+   <div class="srcrow">
+    <div class="filebox"><label class="pick" for="file">Choose File</label><span class="fname" id="fname">No file chosen</span></div>
+    <input type="file" id="file" accept="video/*">
+    <span class="or">or</span>
+    <input type="text" class="url" id="url" placeholder="www.youtube.com/watch?v=...">
+   </div>
+   <div class="two">
+    <div><label>Aspect Ratio</label>
+     <select id="aspect"><option value="9:16">(Shorts/Reels) 9:16</option><option value="1:1">(Square) 1:1</option><option value="16:9">(YouTube) 16:9</option></select></div>
+    <div><label>Number of Clips</label>
+     <input type="number" id="count" min="1" max="20" value="3"></div>
+   </div>
+   <label>Mode</label>
+   <div class="modes">
+    <div class="mode" id="m-local"><b>Local</b><span>Runs on your device - no internet needed - slightly slower</span></div>
+    <div class="mode sel" id="m-api"><b>API</b><span>Fast - needs a Groq API key</span></div>
+   </div>
+   <button class="go" id="go">&#128640; Start Generating Clips &#10024;</button>
+  </div>
+
+  <div class="card stcard">
+   <h3>Processing Status <button class="clr" id="clr" title="Clear">&#128465;</button></h3>
+   <div class="stbody" id="stbody">
+    <div class="empty"><div class="box">&#128230;</div><p>Paste a link or choose a file and press start to see the generation status here.</p></div>
+   </div>
+  </div>
+ </div>
+
+ <div class="foot">Original tool developed by Baraa Mohamed - AI School channel &middot; English rebuild, runs locally, your keys stay on your PC</div>
+</div>
+
+<!-- settings modal -->
+<div class="mback" id="mback">
+ <div class="modal" id="modal">
+  <button class="mx" id="mx">&#10005;</button>
+  <div id="m-quick">
+   <h3>API Settings</h3>
+   <label style="text-align:left">Groq API Key</label>
+   <input type="password" id="gkey" placeholder="gsk_...">
+   <div class="hint">Get a free key at console.groq.com - the key is saved locally on your device only (data/settings.json).</div>
+   <button class="save" id="savekey">Save Settings</button>
+   <a class="adv" id="advlink">Advanced settings (providers, prompt, captions, clip length...) &#9662;</a>
+  </div>
+  <div id="m-adv" style="display:none">
+   <h3>Advanced Settings</h3>
+   <div id="form"></div>
+   <div style="display:flex;gap:10px;align-items:center;margin-top:14px">
+    <button class="save" id="saveadv" style="margin-top:0;flex:1">Save Settings</button>
+    <button class="btn2" id="reset">Reset (keeps keys)</button>
+   </div>
+   <a class="adv" id="backlink">&#9652; Back to API settings</a>
+  </div>
+ </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);let S=null,PRESETS={},cur=null,timer=null,mode='api';
+const api=(u,o)=>fetch(u,o).then(async r=>{if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||r.statusText);return r.json()});
+const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const get=(o,p)=>p.split('.').reduce((a,k)=>a?.[k],o);
+function setp(o,p,v){const k=p.split('.');let a=o;k.slice(0,-1).forEach(x=>a=a[x]);a[k.at(-1)]=v}
+
+/* ---------- mode cards ---------- */
+function setMode(m){mode=m;$('#m-local').classList.toggle('sel',m=='local');$('#m-api').classList.toggle('sel',m=='api')}
+$('#m-local').onclick=()=>setMode('local');$('#m-api').onclick=()=>setMode('api');
+
+/* ---------- file label ---------- */
+$('#file').onchange=e=>{$('#fname').textContent=e.target.files[0]?e.target.files[0].name:'No file chosen'};
+
+/* ---------- modal ---------- */
+$('#gear').onclick=()=>{$('#mback').classList.add('on')};
+$('#mx').onclick=()=>$('#mback').classList.remove('on');
+$('#mback').addEventListener('click',e=>{if(e.target.id=='mback')$('#mback').classList.remove('on')});
+$('#advlink').onclick=()=>{$('#m-quick').style.display='none';$('#m-adv').style.display='';$('#modal').classList.add('wide');buildForm()};
+$('#backlink').onclick=()=>{$('#m-adv').style.display='none';$('#m-quick').style.display='';$('#modal').classList.remove('wide')};
+$('#savekey').onclick=async()=>{const k=$('#gkey').value.trim();
+ const body={transcription:{provider:'groq',api_key:k,base_url:'https://api.groq.com/openai/v1',model:'whisper-large-v3-turbo'},llm:{api_key:k}};
+ if(S.llm.provider=='groq'||!S.llm.api_key){body.llm.provider='groq';body.llm.base_url='https://api.groq.com/openai/v1';if(!S.llm.api_key)body.llm.model='llama-3.3-70b-versatile'}
+ await api('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const r=await api('/api/settings');S=r.settings;$('#gkey').value=S.transcription.api_key;alert('Settings saved successfully!')};
+
+/* ---------- advanced form ---------- */
+const F=[
+ ['Transcription (speech to text)',[
+  ['transcription.provider','Provider','select',['local','groq','openai_compatible'],'local = on your PC, no key (default). groq = free Whisper API at console.groq.com. If the API cannot transcribe (e.g. FreeLLMAPI), the app falls back to local automatically.'],
+  ['transcription.api_key','API key','password'],['transcription.base_url','API base URL','text'],['transcription.model','Model','text'],
+  ['transcription.language','Language (empty = auto-detect, or e.g. en)','text'],['transcription.local_model','Local model size','select',['tiny','base','small','medium']],'test:transcription']],
+ ['AI clip picker (LLM)',[
+  ['llm.provider','Provider preset','select',['groq','freellmapi','gemini','openrouter','openai','custom','none'],'Choosing a preset fills the URL and a default model. freellmapi = your local FreeLLMAPI server (set its port, model auto). "none" = no LLM, a local heuristic picks clips.'],
+  ['llm.api_key','API key','password'],['llm.base_url','API base URL (any OpenAI-compatible API)','text'],['llm.model','Model','text'],
+  ['llm.temperature','Temperature','number'],['llm.json_mode','Ask the API for strict JSON output','check'],'test:llm']],
+ ['Prompt',[['prompt','Instructions sent to the LLM. Keep {count}, {min}, {max}. Keep the JSON format at the end.','area']]],
+ ['Clips',[['clips.count','Number of clips','number'],['clips.min_seconds','Min length (s)','number'],['clips.max_seconds','Max length (s)','number'],
+  ['clips.framing','Framing','select',['center','blur'],'center = crop to fill. blur = whole picture on a blurred background.'],
+  ['clips.crop_x','Crop position (0 left, 0.5 center, 1 right)','number']]],
+ ['Captions',[['captions.enabled','Burn captions into the video','check'],['captions.font','Font (must be installed on your PC)','text'],['captions.size','Size','number'],
+  ['captions.bold','Bold','check'],['captions.uppercase','UPPERCASE','check'],['captions.text_color','Text color','color'],['captions.highlight_color','Active word color','color'],
+  ['captions.outline_color','Outline color','color'],['captions.outline','Outline width','number'],['captions.position','Position','select',['bottom','middle','top']],
+  ['captions.margin','Distance from edge','number'],['captions.words_per_line','Words per line','number'],['captions.highlight_active_word','Highlight the word being spoken','check']]],
+ ['Video output',[['render.height','Output height (px)','number'],['render.crf','Quality (CRF, lower = better, 18-28)','number'],['render.preset','Encoder speed','select',['ultrafast','veryfast','fast','medium','slow']],['render.audio_bitrate','Audio bitrate','text']]],
+ ['Downloading',[['download.max_height','Max download resolution','number'],['download.cookies_from_browser','Cookies from browser (fixes YouTube "confirm you are not a bot"): chrome, edge, firefox or empty','text']]]
+];
+function buildForm(){let h='';F.forEach(([t,fs])=>{h+=`<div class="sec"><h4>${t}</h4><div class="row">`;
+ let wide='';fs.forEach(f=>{if(typeof f=='string'){const k=f.split(':')[1];wide+=`<div style="margin-top:12px"><button class="btn2" onclick="testKey('${k}',this)">Test connection</button><span class="tst" id="test-${k}"></span></div>`;return}
+ const [p,l,ty,opt,hint]=f;const v=get(S,p);let el='';
+ if(ty=='select')el=`<select data-p="${p}">${opt.map(o=>`<option ${o==v?'selected':''}>${o}</option>`).join('')}</select>`;
+ else if(ty=='area')el=`<textarea data-p="${p}">${esc(v)}</textarea>`;
+ else if(ty=='check')el=`<div class="chk"><input type="checkbox" data-p="${p}" ${v?'checked':''}> ${l}</div>`;
+ else if(ty=='color')el=`<input type="color" data-p="${p}" value="${esc(v)}" style="height:38px;padding:3px">`;
+ else el=`<input type="${ty}" data-p="${p}" value="${esc(v)}" ${ty=='number'?'step="any"':''}>`;
+ const box=ty=='area'?'<div style="grid-column:1/-1">':'<div>';
+ h+=box+(ty=='check'?'':`<label>${l}</label>`)+el+(hint?`<div class="hint">${hint}</div>`:'')+'</div>'});
+ h+=`</div>${wide}</div>`});$('#form').innerHTML=h;
+ document.querySelector('[data-p="llm.provider"]').onchange=e=>{const p=PRESETS[e.target.value];if(p){document.querySelector('[data-p="llm.base_url"]').value=p.base_url;document.querySelector('[data-p="llm.model"]').value=p.model}};
+ document.querySelector('[data-p="transcription.provider"]').onchange=e=>{const b=document.querySelector('[data-p="transcription.base_url"]'),m=document.querySelector('[data-p="transcription.model"]');if(e.target.value=='groq'){b.value='https://api.groq.com/openai/v1';m.value='whisper-large-v3-turbo'}if(e.target.value=='openai_compatible'&&b.value.includes('groq')){b.value='https://api.openai.com/v1';m.value='whisper-1'}}}
+function collect(){const o=JSON.parse(JSON.stringify(S));document.querySelectorAll('#form [data-p]').forEach(e=>{let v=e.type=='checkbox'?e.checked:e.type=='number'?parseFloat(e.value):e.value;if(e.type=='number'&&isNaN(v))return;setp(o,e.dataset.p,v)});return o}
+$('#saveadv').onclick=async()=>{const r=await api('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(collect())});S=r.settings;$('#gkey').value=S.transcription.api_key;buildForm();alert('Settings saved successfully!')};
+$('#reset').onclick=async()=>{if(!confirm('Reset all settings except API keys?'))return;S=(await api('/api/settings/reset',{method:'POST'})).settings;buildForm()};
+async function testKey(k,b){await $('#saveadv').onclick();const el=$('#test-'+k);if(!el)return;el.textContent='Testing...';const r=await api('/api/test/'+k,{method:'POST'});el.textContent=r.message;el.style.color=r.ok?'#34d399':'#fb7185'}
+
+/* ---------- generate + status ---------- */
+$('#go').onclick=async()=>{const fd=new FormData();fd.append('url',$('#url').value);const f=$('#file').files[0];if(f)fd.append('file',f);
+ fd.append('count',$('#count').value);fd.append('aspect',$('#aspect').value);fd.append('mode',mode);
+ if(!$('#url').value.trim()&&!f){showErr('Paste a YouTube link or choose a video file first.');return}
+ $('#go').disabled=true;try{const r=await api('/api/jobs',{method:'POST',body:fd});follow(r.id)}catch(e){showErr(e.message)}$('#go').disabled=false};
+function follow(id){cur=id;clearInterval(timer);poll();timer=setInterval(poll,1500)}
+async function poll(){if(!cur)return;const j=await api('/api/jobs/'+cur);show(j);if(j.status=='done'||j.status=='error')clearInterval(timer)}
+function showErr(m){$('#stbody').innerHTML=`<div class="errbox">&#9888; ${esc(m)}</div>`}
+function show(j){const b=$('#stbody');
+ if(j.status=='queued'||j.status=='running'){
+  const lines=j.log.slice(-7).map(esc).join('\n');
+  b.innerHTML=`<div><div class="spin"></div><div class="proc">Processing...</div>
+   <div class="plog">${lines}</div>
+   <div class="note">Please wait, this can take a few minutes depending on the video length and mode.<br>You can follow the details in the terminal window.</div></div>`;return}
+ if(j.status=='error'){b.innerHTML=`<div class="proc" style="margin-top:18px;color:var(--er)">Failed &#10060;</div><div class="errbox">${esc(j.error||'Unknown error')}</div>`;return}
+ const clips=j.clips.map((c,i)=>{const dur=(c.end-c.start).toFixed(1);
+  return `<div class="res"><b class="t">Clip ${i+1}: ${esc(c.title)}</b>
+   <div class="lab">Why the AI picked it:</div><div class="why">${esc(c.reason||'-')}</div>
+   ${c.hook?`<div class="lab">Opening line (Hook):</div><div class="hook">"${esc(c.hook)}"</div>`:''}
+   <div class="meta">Score: <b>${Math.round(c.score||0)}/100</b> &nbsp;|&nbsp; Duration: <b>${dur}s</b></div>
+   <div class="path">outputs\\${j.id}\\${esc(c.file)}</div>
+   <a class="dl" href="/outputs/${j.id}/${encodeURIComponent(c.file)}" download>&#11015; Download clip</a></div>`}).join('');
+ b.innerHTML=`<div class="done-h">&#127881; Done successfully!</div><div class="done-n">Generated ${j.clips.length} clip(s)</div>${clips}`}
+$('#clr').onclick=async()=>{clearInterval(timer);if(cur){try{await api('/api/jobs/'+cur,{method:'DELETE'})}catch(e){}cur=null}
+ $('#stbody').innerHTML='<div class="empty"><div class="box">&#128230;</div><p>Paste a link or choose a file and press start to see the generation status here.</p></div>'};
+(async()=>{const r=await api('/api/settings');S=r.settings;PRESETS=r.presets;$('#gkey').value=S.transcription.api_key||'';
+ $('#count').value=S.clips.count;$('#aspect').value=S.clips.aspect;
+ const js=await api('/api/jobs');if(js.length){const j=js[0];cur=j.id;if(j.status=='running'||j.status=='queued')follow(j.id);else show(j)}
+ if(location.hash=='#settings'){$('#mback').classList.add('on')}})();
+</script></body></html>
